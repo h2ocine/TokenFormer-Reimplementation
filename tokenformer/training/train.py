@@ -34,14 +34,15 @@ def train(
     num_epochs=10,
     learning_rate=0.001,
     token_num=32,
-    val_ratio=0.1
+    val_ratio=0.1,
+    test_ratio=0.1
 ):
     device = get_device()
-    print(f"Training on {device}")
+    print(f"🚀 Training on {device}")
 
-    # Charger les données
-    train_loader, val_loader, vocab_size = get_dataloaders(file_path, max_seq_len, batch_size, val_ratio)
-    print(f"Vocab Size: {vocab_size}")
+    # Charger les données avec split train/val/test
+    train_loader, val_loader, test_loader, vocab_size = get_dataloaders(file_path, max_seq_len, batch_size, val_ratio, test_ratio)
+    print(f"📖 Vocab Size: {vocab_size}")
 
     # Initialiser le modèle
     model = TokenformerLayer(
@@ -52,16 +53,16 @@ def train(
         attention_dropout=0.1,  
         hidden_dropout=0.1,          
         token_num=token_num
-    )
+    ).to(device)
 
-    model = model.to(device)
-    print(f"Trainable Parameters: {count_trainable_params(model)}")
-    print(f"Training Samples: {len(train_loader.dataset)} | Validation Samples: {len(val_loader.dataset)}")
+    print(f"📊 Trainable Parameters: {count_trainable_params(model)}")
+    print(f"🟢 Training Samples: {len(train_loader.dataset)} | 🔵 Validation Samples: {len(val_loader.dataset)} | 🔴 Test Samples: {len(test_loader.dataset)}")
 
+    # Définir la fonction de perte et l'optimiseur
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    print("Starting Training...")
+    print("🔥 Starting Training...")
     total_training_time = 0.0
 
     for epoch in range(num_epochs):
@@ -85,11 +86,17 @@ def train(
         epoch_time = time.time() - start_time
         total_training_time += epoch_time
 
+        # Évaluation sur validation
         if use_metrics:
-            val_loss, perplexity = estimate_perplexity(model, val_loader, criterion, device)
-            print(f"Epoch {epoch+1}/{num_epochs} | Train Loss: {epoch_loss / len(train_loader):.4f} | "
-                  f"Val Loss: {val_loss:.4f} | Perplexity: {perplexity:.4f} | Time: {epoch_time:.2f}s")
+            val_loss, val_perplexity = estimate_perplexity(model, val_loader, criterion, device)
+            print(f"📈 Epoch {epoch+1}/{num_epochs} | Train Loss: {epoch_loss / len(train_loader):.4f} | "
+                  f"Val Loss: {val_loss:.4f} | Val Perplexity: {val_perplexity:.4f} | Time: {epoch_time:.2f}s")
         else:
-            print(f"Epoch {epoch+1}/{num_epochs} | Train Loss: {epoch_loss / len(train_loader):.4f} | Time: {epoch_time:.2f}s")
+            print(f"📈 Epoch {epoch+1}/{num_epochs} | Train Loss: {epoch_loss / len(train_loader):.4f} | Time: {epoch_time:.2f}s")
 
-    print(f"Total Training Time: {total_training_time:.2f}s")
+    # Évaluation finale sur le set de test
+    print("\n🚀 Running final evaluation on test set...")
+    test_loss, test_perplexity = estimate_perplexity(model, test_loader, criterion, device)
+    print(f"🔴 Test Loss: {test_loss:.4f} | Test Perplexity: {test_perplexity:.4f}")
+
+    print(f"✅ Total Training Time: {total_training_time:.2f}s")
