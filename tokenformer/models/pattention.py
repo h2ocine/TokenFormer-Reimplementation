@@ -5,7 +5,7 @@ import math
 
 class Pattention(nn.Module):
     """Pattention Layer with learnable parameter tokens."""
-    
+
     def __init__(self, d1, d2, n, param_key_init_method, param_value_init_method, norm_activation_type):
         super().__init__()
 
@@ -16,9 +16,21 @@ class Pattention(nn.Module):
         
         self.key_param_tokens = nn.Parameter(torch.rand((n, d1)))  
         self.value_param_tokens = nn.Parameter(torch.rand((n, d2)))  
-        
+
         param_key_init_method(self.key_param_tokens)
         param_value_init_method(self.value_param_tokens)
+
+    def expand_tokens(self, num_new_tokens):
+        """Ajoute de nouveaux tokens paramétriques sans perdre les poids déjà appris."""
+        device = self.key_param_tokens.device
+
+        new_key_tokens = nn.Parameter(torch.zeros((num_new_tokens, self.param_key_dim), device=device))
+        new_value_tokens = nn.Parameter(torch.zeros((num_new_tokens, self.param_value_dim), device=device))
+
+        self.key_param_tokens = nn.Parameter(torch.cat([self.key_param_tokens, new_key_tokens], dim=0))
+        self.value_param_tokens = nn.Parameter(torch.cat([self.value_param_tokens, new_value_tokens], dim=0))
+
+        self.param_token_num += num_new_tokens
     
     def nonlinear_norm_func(self, inputs, normalize_type, dim=-1):
         if normalize_type == 'softmax': 

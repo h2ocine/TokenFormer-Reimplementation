@@ -4,6 +4,7 @@ import math
 from models.pattention import Pattention
 
 class SelfAttention(nn.Module):
+    """self attention for tokenformer"""
     def __init__(self, hidden_size, num_attention_heads, attention_dropout=0.1, token_num=10):
         super().__init__()
         self.hidden_size = hidden_size
