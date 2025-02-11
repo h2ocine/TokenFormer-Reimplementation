@@ -44,5 +44,5 @@ Ce projet a été réalisé par :
 
 ## 📜 Références
 - **TokenFormer: Rethinking Transformer Scaling with Tokenized Model Parameters**  
-  _[Lien vers l'article si disponible]_
+  _[https://arxiv.org/abs/2410.23168]_
 
